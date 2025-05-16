@@ -95,45 +95,48 @@
         const cs = consensus.result.round_state;
         const vset = validators.result.validators;
 
-        if (lastHeight !== cs.height) {
-          lastHeight = cs.height;
+        lastHeight = cs.height;
 
-          document.getElementById("height").innerText = cs.height;
-          document.getElementById("round").innerText = cs.round;
-          document.getElementById("step").innerText = cs.step;
-          document.getElementById("prevotes").innerText = cs.prevotes_bit_array;
-          document.getElementById("precommits").innerText = cs.precommits_bit_array;
-          document.getElementById("online-vp").innerText = cs.votes.bit_array;
-          document.getElementById("proposer").innerText = cs.proposer?.address || "Unknown";
-          document.getElementById("block-hash").innerText = cs.proposal_block_hash;
-          document.getElementById("vp-total").innerText = `${cs.votes.votes.length} / 4.2m`;
+        document.getElementById("height").innerText = cs.height;
+        document.getElementById("round").innerText = cs.round;
+        document.getElementById("step").innerText = cs.step;
+        document.getElementById("prevotes").innerText = cs.prevotes_bit_array;
+        document.getElementById("precommits").innerText = cs.precommits_bit_array;
+        document.getElementById("online-vp").innerText = cs.votes.bit_array;
+        document.getElementById("proposer").innerText = cs.proposer?.address || "Unknown";
+        document.getElementById("block-hash").innerText = cs.proposal_block_hash;
+        document.getElementById("vp-total").innerText = `${cs.votes.votes.length} / 4.2m`;
 
-          const vpPrevoteText = Object.entries(cs.votes.prevotes || {}).map(([k, v]) => `${k}: ${v}%`).join("<br>");
-          const vpPrecommitText = Object.entries(cs.votes.precommits || {}).map(([k, v]) => `${k}: ${v}%`).join("<br>");
-          document.getElementById("vp-prevote").innerHTML = vpPrevoteText + '<br>Offline: 100.00%';
-          document.getElementById("vp-precommit").innerHTML = vpPrecommitText + '<br>Offline: 100.00%';
+        const vpPrevoteText = Object.entries(cs.votes.prevotes || {}).map(([k, v]) => `${k}: ${v}%`).join("<br>");
+        const vpPrecommitText = Object.entries(cs.votes.precommits || {}).map(([k, v]) => `${k}: ${v}%`).join("<br>");
+        document.getElementById("vp-prevote").innerHTML = vpPrevoteText + '<br>Offline: 100.00%';
+        document.getElementById("vp-precommit").innerHTML = vpPrecommitText + '<br>Offline: 100.00%';
 
-          const tableBody = document.getElementById("validator-table").querySelector("tbody");
-          tableBody.innerHTML = "";
-          vset.forEach((val, idx) => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-              <td>${idx + 1}</td>
-              <td>${val.description?.moniker || val.address}</td>
-              <td>${parseFloat(val.voting_power / 4200000 * 100).toFixed(2)}%</td>
-              <td>${val.prevote_count || 0}</td>
-              <td>${val.precommit_count || 0}</td>
-            `;
-            tableBody.appendChild(row);
-          });
-        }
+        const proposerAddress = cs.proposer?.address;
+        const tableBody = document.getElementById("validator-table").querySelector("tbody");
+        tableBody.innerHTML = "";
+        vset.forEach((val, idx) => {
+          const isProposer = val.address === proposerAddress;
+          const row = document.createElement("tr");
+          if (isProposer) {
+            row.style.backgroundColor = "#e0f7fa";
+          }
+          row.innerHTML = `
+            <td>${idx + 1}</td>
+            <td>${val.description?.moniker || val.address}</td>
+            <td>${parseFloat(val.voting_power / 4200000 * 100).toFixed(2)}%</td>
+            <td>${val.prevote_count || 0}</td>
+            <td>${val.precommit_count || 0}</td>
+          `;
+          tableBody.appendChild(row);
+        });
       } catch (e) {
         console.error("Error fetching data:", e);
       }
     }
 
     fetchData();
-    setInterval(fetchData, 3000); // Refresh every 3s for new block detection
+    setInterval(fetchData, 3000);
   </script>
 </body>
 </html>
