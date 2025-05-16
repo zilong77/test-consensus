@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consensus State Monitor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .section {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #eee;
+    }
+  </style>
+</head>
+<body>
+  <h1>Consensus State Dashboard</h1>
+  <div class="section" id="basic-info">
+    <h2>Consensus Info</h2>
+    <p><strong>Height:</strong> <span id="height">Loading...</span></p>
+    <p><strong>Round:</strong> <span id="round">Loading...</span></p>
+    <p><strong>Step:</strong> <span id="step">Loading...</span></p>
+    <p><strong>Prevotes:</strong> <span id="prevotes">Loading...</span></p>
+    <p><strong>Precommits:</strong> <span id="precommits">Loading...</span></p>
+    <p><strong>Online VP:</strong> <span id="online-vp">Loading...</span></p>
+    <p><strong>Block Proposer:</strong> <span id="proposer">Loading...</span></p>
+    <p><strong>Proposal Block Hash:</strong> <span id="block-hash">Loading...</span></p>
+    <p><strong>VP: Online / Total:</strong> <span id="vp-total">Loading...</span></p>
+  </div>
+
+  <div class="section" id="vp-hash-prevote">
+    <h2>VP by Hash (Prevote)</h2>
+    <p id="vp-prevote">Loading...</p>
+  </div>
+
+  <div class="section" id="vp-hash-precommit">
+    <h2>VP by Hash (Precommit)</h2>
+    <p id="vp-precommit">Loading...</p>
+  </div>
+
+  <div class="section">
+    <h2>Validators</h2>
+    <table id="validator-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Validator</th>
+          <th>VP (%)</th>
+          <th>Prevote #</th>
+          <th>Precommit #</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    async function fetchData() {
+      const consensusRes = await fetch("https://burnt-testnet-rpc.itrocket.net/consensus_state");
+      const statusRes = await fetch("https://burnt-testnet-rpc.itrocket.net/status");
+      const validatorsRes = await fetch("https://burnt-testnet-rpc.itrocket.net/validators");
+
+      const consensus = await consensusRes.json();
+      const status = await statusRes.json();
+      const validators = await validatorsRes.json();
+
+      const cs = consensus.result.round_state;
+      const vset = validators.result.validators;
+
+      document.getElementById("height").innerText = cs.height;
+      document.getElementById("round").innerText = cs.round;
+      document.getElementById("step").innerText = cs.step;
+      document.getElementById("prevotes").innerText = cs.prevotes_bit_array;
+      document.getElementById("precommits").innerText = cs.precommits_bit_array;
+      document.getElementById("online-vp").innerText = cs.votes.bit_array;
+      document.getElementById("proposer").innerText = cs.proposer && cs.proposer.name || "Unknown";
+      document.getElementById("block-hash").innerText = cs.proposal_block_hash;
+      document.getElementById("vp-total").innerText = `${cs.votes.votes.length} / 4.2m`;
+
+      // VP by hash Prevote/Precommit
+      const vpPrevoteText = Object.entries(cs.votes.prevotes || {}).map(([k, v]) => `${k}: ${v}%`).join("<br>");
+      const vpPrecommitText = Object.entries(cs.votes.precommits || {}).map(([k, v]) => `${k}: ${v}%`).join("<br>");
+      document.getElementById("vp-prevote").innerHTML = vpPrevoteText + '<br>Offline: 100.00%';
+      document.getElementById("vp-precommit").innerHTML = vpPrecommitText + '<br>Offline: 100.00%';
+
+      const tableBody = document.getElementById("validator-table").querySelector("tbody");
+      tableBody.innerHTML = "";
+      vset.forEach((val, idx) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>${val.description?.moniker || val.address}</td>
+          <td>${parseFloat(val.voting_power / 4200000 * 100).toFixed(2)}%</td>
+          <td>${val.prevote_count || 0}</td>
+          <td>${val.precommit_count || 0}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    fetchData();
+  </script>
+</body>
+</html>
