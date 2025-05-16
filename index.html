@@ -81,9 +81,9 @@
     async function fetchData() {
       try {
         const [consensusRes, statusRes, validatorsRes] = await Promise.all([
-          fetch("https://burnt-testnet-rpc.itrocket.net/consensus_state"),
-          fetch("https://burnt-testnet-rpc.itrocket.net/status"),
-          fetch("https://burnt-testnet-rpc.itrocket.net/validators")
+          fetch("https://lumera-testnet-rpc.polkachu.com/consensus_state"),
+          fetch("https://lumera-testnet-rpc.polkachu.com/status"),
+          fetch("https://lumera-testnet-rpc.polkachu.com/validators")
         ]);
 
         const consensus = await consensusRes.json();
