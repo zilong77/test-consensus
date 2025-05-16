@@ -93,11 +93,13 @@
         const cs = consensus.result.round_state;
         const vset = validators.result.validators;
 
-        document.getElementById("height").innerText = cs.height;
-        document.getElementById("round").innerText = cs.round;
-        document.getElementById("step").innerText = cs.step;
-        document.getElementById("prevotes").innerText = cs.prevotes_bit_array;
-        document.getElementById("precommits").innerText = cs.precommits_bit_array;
+        const [height, round, step] = cs["height/round/step"]?.split("/") || [];
+        document.getElementById("height").innerText = height || "N/A";
+        document.getElementById("round").innerText = round || "N/A";
+        document.getElementById("step").innerText = step || "N/A";
+        document.getElementById("prevotes").innerText = cs.votes?.prevotes || "N/A";
+        document.getElementById("precommits").innerText = cs.votes?.precommits || "N/A";
+
         document.getElementById("online-vp").innerText = cs.votes?.bit_array || "-";
         document.getElementById("proposer").innerText = cs.proposer?.address || "Unknown";
         document.getElementById("block-hash").innerText = cs.proposal_block_hash || "-";
